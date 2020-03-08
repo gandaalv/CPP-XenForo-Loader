@@ -12,7 +12,8 @@ class CUtils
 public:
 	string GetAppData();
 	bool dirExists(const string& dirName);
-	void StoreLogin(string username, string password, string file);
+	void StoreLogin(string username, string password, string hwid, string file);
+	DWORD GetHWID();
 };
 
 extern CUtils* utils;
