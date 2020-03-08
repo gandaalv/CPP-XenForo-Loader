@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="request">
+      <UniqueIdentifier>{c1f500b1-6010-4a1f-bf64-b839deffb04b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="request\request.hpp">
+      <Filter>request</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
