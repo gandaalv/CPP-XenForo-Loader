@@ -58,7 +58,7 @@ int main()
         // setting up the json document and parsing the output
         Document document;
         document.Parse(string(postResponse.body.begin(), postResponse.body.end()).c_str());
-
+      
         assert(document["success"].IsBool()); // checking if the resonded function "success" is a bool
         success = document["success"].GetBool(); // defining our local variable "success" to be the responded bool
 
@@ -77,48 +77,62 @@ int main()
                 }
                 else // if the logged in user is not a staff member, continue with the hwid check
                 {
-                    try // try to make a second request
-                    {
-                        cout << "checking hwid..." << endl;
+                    if (Value* v = GetValueByPointer(document, "/user")) {
+                        const Value& secondary_group = (*v)["secondary_group_ids"];
+                        assert(secondary_group.IsArray());
 
-                        hwid = to_string(utils->GetHWID());
-                        hwidtoken = "1337";
+                        if (secondary_group[0].GetInt() == 2 || secondary_group[0].GetInt() == 3 || secondary_group[0].GetInt() == 4 || secondary_group[0].GetInt() == 5) // kinda ghetto like, but it checks for the secondary group ids. why? because the xenforo userupgrade function only edits the secondary group id, not the primary.
+                        { // the 0 defines ^^^ the position of inside the array, the other numbers define the usergroup id
+                            try // try to make a second request
+                            {
+                                cout << "checking hwid..." << endl;
 
-                        Request requesthwid("http://xenforo.gandaa.lv/hwid.php?username=" + username + "&token=" + hwidtoken + "&hwid=" + hwid); // we will use now the hwid.php for the new request
+                                hwid = to_string(utils->GetHWID());
+                                hwidtoken = "1337";
 
-                        const http::Response getResponseHWID = requesthwid.send("GET"); // for the hwid request we only need a simple 'GET' request
-                        respondedhwid = string(getResponseHWID.body.begin(), getResponseHWID.body.end());
+                                Request requesthwid("http://xenforo.gandaa.lv/hwid.php?username=" + username + "&token=" + hwidtoken + "&hwid=" + hwid); // we will use now the hwid.php for the new request
 
-                        if (respondedhwid == "new") // if there is no hwid set
-                        {
-                            cout << "no stored hwid found! setting new one." << endl;
-                            utils->StoreLogin(username, password, hwid, appdatafile); // storing the logindata for later
-                            // do cheat stuff
+                                const http::Response getResponseHWID = requesthwid.send("GET"); // for the hwid request we only need a simple 'GET' request
+                                respondedhwid = string(getResponseHWID.body.begin(), getResponseHWID.body.end());
+
+                                if (respondedhwid == "new") // if there is no hwid set
+                                {
+                                    cout << "no stored hwid found! setting new one." << endl;
+                                    utils->StoreLogin(username, password, hwid, appdatafile); // storing the logindata for later
+                                    // do cheat stuff
+                                }
+                                else if (respondedhwid == "accepted") // if hwid check was successful
+                                {
+                                    cout << "hwid check was successful, welcome back " + username + " :)" << endl;
+                                    utils->StoreLogin(username, password, hwid, appdatafile); // storing the logindata for later
+                                    // do cheat stuff
+                                }
+                                else if (respondedhwid == "declined")
+                                {
+                                    cout << "unknown hwid detected! please request a reset" << endl;
+                                    // don't allow to continue / exit the programm
+                                }
+                                else
+                                {
+                                    cout << "some unknown error occured, please check back later :(" << endl;
+                                    // some other error within the system
+                                }
+                            }
+                            catch (const exception & e) // catch any errors
+                            {
+                                cerr << "hwid request failed, error: " << e.what() << endl; // print the errors
+
+                                system("pause"); // wait for user input
+
+                                return EXIT_FAILURE; //exit programm with status code 1
+                            }
                         }
-                        else if (respondedhwid == "accepted") // if hwid check was successful
+                        else // no subscription - wrong usergroup
                         {
-                            cout << "hwid check was successful, welcome back " + username + " :)" << endl;
-                            utils->StoreLogin(username, password, hwid, appdatafile); // storing the logindata for later
-                            // do cheat stuff
+                            cout << "no active sub found" << endl;
+                            system("pause");
+                            return EXIT_FAILURE;
                         }
-                        else if (respondedhwid == "declined")
-                        {
-                            cout << "unknown hwid detected! please request a reset" << endl;
-                            // don't allow to continue / exit the programm
-                        }
-                        else
-                        {
-                            cout << "some unknown error occured, please check back later :(" << endl;
-                            // some other error within the system
-                        }
-                    }
-                    catch (const exception & e) // catch any errors
-                    {
-                        cerr << "hwid request failed, error: " << e.what() << endl; // print the errors
-
-                        system("pause"); // wait for user input
-
-                        return EXIT_FAILURE; //exit programm with status code 1
                     }
                 }
             }
